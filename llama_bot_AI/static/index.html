@@ -11,30 +11,50 @@
         <h1 class="text-xl font-bold text-center mb-4">Чат-бот для підтримки психічного здоров'я</h1>
         <div id="chat-box" class="h-80 overflow-y-auto border p-3 mb-4 bg-gray-50 rounded-lg"></div>
         <div class="flex">
-            <input id="user-input" type="text" class="flex-1 p-2 border rounded-lg" placeholder="Введіть повідомлення...">
-            <button onclick="sendMessage()" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg">Надіслати</button>
+            <input id="user-input" type="text" class="flex-1 p-2 border rounded-lg"
+                   placeholder="Введіть повідомлення..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                Надіслати
+            </button>
         </div>
     </div>
 
     <script>
         async function sendMessage() {
-            let input = document.getElementById("user-input");
-            let chatBox = document.getElementById("chat-box");
-            let userText = input.value.trim();
-            if (!userText) return;
+        let input = document.getElementById("user-input");
+        let chatBox = document.getElementById("chat-box");
+        let userText = input.value.trim();
+        if (!userText) return;
 
-            chatBox.innerHTML += `<div class='text-right text-blue-600'>Ви: ${userText}</div>`;
-            input.value = "";
+        chatBox.innerHTML += `<div class='text-right text-blue-600'>Ви: ${userText}</div>`;
+        input.value = "";
 
+        try {
             let response = await fetch("/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ prompt: userText })
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
             let data = await response.json();
             chatBox.innerHTML += `<div class='text-left text-gray-700'>Бот: ${data.response}</div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
+        } catch (error) {
+            console.error("Помилка запиту:", error);
+            chatBox.innerHTML += `<div class='text-left text-red-500'>Помилка отримання відповіді.</div>`;
         }
+}
+
+    document.getElementById("user-input").addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {  // Check if Enter key is pressed
+            event.preventDefault();   // Prevent default behavior (form submission)
+            sendMessage();            // Call sendMessage() function
+        }
+});
     </script>
 </body>
 </html>
